@@ -20,8 +20,20 @@ spring:
     port: 5672
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        default-requeue-rejected: false   # after retries the message goes to the .dlq queue
+        retry:
+          enabled: true
+          max-attempts: 5
+          initial-interval: 1s
+          multiplier: 2
 
 payment:
+  # MOCK provider: fake payment page for demos / load tests. Turn off when only real providers should be used.
+  mock:
+    enabled: ${PAYMENT_MOCK_ENABLED:true}
+  outbox-poll-interval-ms: 1000
   vnpay:
     # sandbox values; supply real sandbox credentials via environment
     tmn-code: ${VNPAY_TMN_CODE:}
@@ -33,6 +45,8 @@ payment:
     access-key: ${MOMO_ACCESS_KEY:}
     secret-key: ${MOMO_SECRET_KEY:}
     endpoint: https://test-payment.momo.vn/v2/gateway/api/create
+    ipn-url: ${MOMO_IPN_URL:http://localhost:8080/api/payments/ipn/momo}
+    redirect-url: ${MOMO_REDIRECT_URL:http://localhost:8080/api/payments/return/momo}
 
 management:
   endpoints:

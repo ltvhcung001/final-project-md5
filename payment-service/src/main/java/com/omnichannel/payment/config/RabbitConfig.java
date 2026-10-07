@@ -1,17 +1,22 @@
 package com.omnichannel.payment.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.omnichannel.common.event.EventNames;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.support.converter.DefaultJackson2JavaTypeMapper;
+import org.springframework.amqp.support.converter.Jackson2JavaTypeMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
+@EnableScheduling
 public class RabbitConfig {
 
     @Bean
@@ -21,7 +26,15 @@ public class RabbitConfig {
 
     @Bean
     Queue orderCreatedQueue() {
-        return QueueBuilder.durable(EventNames.QUEUE_PAYMENT_ORDER_CREATED).build();
+        return QueueBuilder.durable(EventNames.QUEUE_PAYMENT_ORDER_CREATED)
+                .deadLetterExchange("")
+                .deadLetterRoutingKey(EventNames.QUEUE_PAYMENT_ORDER_CREATED + ".dlq")
+                .build();
+    }
+
+    @Bean
+    Queue orderCreatedDlq() {
+        return QueueBuilder.durable(EventNames.QUEUE_PAYMENT_ORDER_CREATED + ".dlq").build();
     }
 
     @Bean
@@ -30,7 +43,12 @@ public class RabbitConfig {
     }
 
     @Bean
-    MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+    MessageConverter jsonMessageConverter(ObjectMapper mapper) {
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(mapper);
+        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
+        typeMapper.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.INFERRED);
+        typeMapper.setTrustedPackages("com.omnichannel.common.event");
+        converter.setJavaTypeMapper(typeMapper);
+        return converter;
     }
 }
