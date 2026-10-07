@@ -50,6 +50,8 @@ export function setup() {
 
   const reset = http.put(`${BASE}/api/inventory/${SKU}`, JSON.stringify({ available: STOCK }), admin);
   check(reset, { 'stock reset': (r) => r.status === 200 });
+  // reserved stock of earlier runs (still unpaid orders) stays reserved, so measure the change only
+  const reservedBefore = reset.json('data.reserved');
 
   const run = Date.now();
   const tokens = [];
@@ -59,7 +61,7 @@ export function setup() {
       JSON.stringify({ email, password: 'Passw0rd!', fullName: `Load User ${i}` }), { headers: JSON_HEADERS });
     tokens.push(r.json('data.accessToken'));
   }
-  return { adminToken, tokens };
+  return { adminToken, tokens, reservedBefore };
 }
 
 export default function (data) {
@@ -91,6 +93,6 @@ export function teardown(data) {
   console.log(`final stock for ${SKU}: available=${stock.available} reserved=${stock.reserved}`);
   check(stock, {
     'stock never negative': (s) => s.available >= 0,
-    'all stock reserved or sold': (s) => s.available === 0 && s.reserved === STOCK,
+    'all stock reserved or sold': (s) => s.available === 0 && s.reserved - data.reservedBefore === STOCK,
   });
 }
