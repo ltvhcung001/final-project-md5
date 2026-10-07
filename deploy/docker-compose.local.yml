@@ -34,3 +34,8 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     ports: ["5672:5672", "15672:15672"]
+
+  # Catches every email sent by notification-service: web UI on http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["1025:1025", "8025:8025"]
