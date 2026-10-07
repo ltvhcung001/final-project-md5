@@ -8,6 +8,7 @@ public enum ErrorCode {
     FORBIDDEN(1002, "Forbidden", HttpStatus.FORBIDDEN),
     NOT_FOUND(1003, "Resource not found", HttpStatus.NOT_FOUND),
     CONFLICT(1004, "Conflict", HttpStatus.CONFLICT),
+    UPSTREAM_UNAVAILABLE(1998, "Dependent service unavailable", HttpStatus.SERVICE_UNAVAILABLE),
     INTERNAL_ERROR(1999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
 
     USER_ALREADY_EXISTS(2001, "User already exists", HttpStatus.CONFLICT),
