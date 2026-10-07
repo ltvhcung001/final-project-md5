@@ -38,6 +38,10 @@ public class UserHeaderFilter extends OncePerRequestFilter {
             injected.put(Headers.USER_ID, jwt.getSubject());
             List<String> roles = jwt.getClaimAsStringList("roles");
             injected.put(Headers.USER_ROLES, roles == null ? "" : String.join(",", roles));
+            String email = jwt.getClaimAsString("email");
+            if (email != null) {
+                injected.put(Headers.USER_EMAIL, email);
+            }
         }
         chain.doFilter(new TrustedHeaderRequest(request, injected), response);
     }

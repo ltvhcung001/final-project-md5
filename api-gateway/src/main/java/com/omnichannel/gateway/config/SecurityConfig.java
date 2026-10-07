@@ -6,7 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -35,13 +36,27 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health/**", "/actuator/prometheus").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/brands/**").permitAll()
+                        // catalog writes, inventory and payment back-office are admin only (RBAC)
+                        .requestMatchers("/api/products/**", "/api/categories/**", "/api/brands/**", "/api/inventory/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers("/api/payments/*/refund", "/api/payments/reconciliation").hasRole("ADMIN")
                         // payment provider callbacks are verified by signature in payment-service
                         .requestMatchers("/api/payments/ipn/**", "/api/payments/return/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(rolesConverter())))
                 .addFilterBefore(rateLimitFilter, BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(userHeaderFilter, BearerTokenAuthenticationFilter.class);
         return http.build();
+    }
+
+    /** Map the "roles" claim (CUSTOMER, ADMIN) to ROLE_* authorities. */
+    private static JwtAuthenticationConverter rolesConverter() {
+        var authorities = new JwtGrantedAuthoritiesConverter();
+        authorities.setAuthoritiesClaimName("roles");
+        authorities.setAuthorityPrefix("ROLE_");
+        var converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(authorities);
+        return converter;
     }
 
     @Bean

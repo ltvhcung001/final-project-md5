@@ -11,8 +11,10 @@ public final class EventNames {
     public static final String PAYMENT_FAILED = "payment.failed";
 
     public static final String QUEUE_PAYMENT_ORDER_CREATED = "payment.order-created";
-    public static final String QUEUE_ORDER_PAYMENT_RESULT = "order.payment-result";
+    public static final String QUEUE_ORDER_PAYMENT_SUCCEEDED = "order.payment-succeeded";
+    public static final String QUEUE_ORDER_PAYMENT_FAILED = "order.payment-failed";
     public static final String QUEUE_NOTIFICATION = "notification.events";
+    public static final String QUEUE_NOTIFICATION_DLQ = "notification.events.dlq";
 
     private EventNames() {
     }

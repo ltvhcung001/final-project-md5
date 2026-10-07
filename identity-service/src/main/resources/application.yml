@@ -21,6 +21,9 @@ identity:
     secret: ${JWT_SECRET:change-me-change-me-change-me-change-me}
     access-ttl: PT15M
     refresh-ttl: P7D
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
 
 management:
   endpoints:

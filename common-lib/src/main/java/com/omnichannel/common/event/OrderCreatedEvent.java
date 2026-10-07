@@ -12,6 +12,7 @@ public record OrderCreatedEvent(
         String userEmail,
         BigDecimal totalAmount,
         String currency,
+        String paymentMethod,
         List<OrderItemEvent> items,
         Instant occurredAt) {
 }
