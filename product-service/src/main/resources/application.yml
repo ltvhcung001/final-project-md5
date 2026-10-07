@@ -13,11 +13,19 @@ spring:
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
 
+search:
+  elasticsearch:
+    # false = search falls back to MongoDB (use on small servers with < 4 GB RAM)
+    enabled: ${SEARCH_ENABLED:false}
+
 grpc:
   server:
     port: 9092
 
 management:
+  health:
+    elasticsearch:
+      enabled: ${SEARCH_ENABLED:false}
   endpoints:
     web:
       exposure:
