@@ -52,7 +52,7 @@ Client -> POST /api/orders (Idempotency-Key)
 | Stop Notification Service, orders still work | Done, run locally | Order created while it was down. The email was delivered after restart from the queue (section 5) |
 | Real VPS with domain, HTTPS, firewall | Prepared, **not executed** | I cannot reach your AWS account. Section 7 is the step-by-step |
 | Monitoring (Prometheus, Grafana, Loki) | Config written, **not run** | Compose profile `monitoring`. No dashboards are provisioned yet (section 9) |
-| Swagger UI per service | Available | `http://localhost:808x/swagger-ui.html` (services published in the local compose) |
+| Swagger UI | Done | One aggregated UI at the gateway: `http://localhost:8080/swagger-ui.html` (section 3.4) |
 
 ---
 
@@ -89,7 +89,7 @@ bash scripts/seed.sh
 | http://localhost:8080 | API gateway |
 | http://localhost:8025 | Mailpit: every email the platform sends |
 | http://localhost:15672 | RabbitMQ UI (guest / guest) |
-| http://localhost:8081-8085/swagger-ui.html | Swagger UI per service (identity, product, order, payment) |
+| http://localhost:8080/swagger-ui.html | **Swagger UI for all services** (use the dropdown top-right); see 3.4 |
 
 Default local admin: `admin@example.com` / `Admin@12345` (created by `identity-service` on startup). **Local use only.**
 
@@ -111,7 +111,18 @@ bash scripts/stop-local.sh
 > Docker avoids it. If you hit the same error natively, try (as administrator) `netsh winsock reset`, reboot, and
 > disable any VPN or endpoint-security network filter. I did not verify that fix.
 
-### 3.3 Optional Elasticsearch
+### 3.3 Test the API from Swagger UI
+
+Open **http://localhost:8080/swagger-ui.html**. The dropdown at the top right switches between identity, product, order and payment.
+
+1. Choose `identity`, open `POST /api/auth/login`, click **Try it out**, and use `{"email":"admin@example.com","password":"Admin@12345"}` (or register a customer with `/api/auth/register`).
+2. Copy `data.accessToken` from the response.
+3. Click **Authorize** (top right), paste the token (without the word `Bearer`) and confirm. It is remembered across page reloads, and it applies to all four services.
+4. Now try any endpoint, for example `order` -> `POST /api/orders` (give any `Idempotency-Key`), then `payment` -> `GET /api/payments/order/{orderId}` and `POST /api/payments/mock/{orderId}/complete`.
+
+Admin-only endpoints (products, inventory) need the admin token, and a customer token gets 403. The internal `X-User-*` headers are hidden because the gateway sets them. On the public server the UI is off by default; set `SWAGGER_ENABLED=true` in `deploy/.env` when you want it for a demo.
+
+### 3.4 Optional Elasticsearch
 
 ```bash
 docker compose -f deploy/docker-compose.local.yml --profile search --profile apps up -d

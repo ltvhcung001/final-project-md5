@@ -29,6 +29,44 @@ spring:
               predicates:
                 - Path=/api/payments/**,/api/payments
 
+            # aggregated Swagger: the gateway serves each service's OpenAPI document under /v3/api-docs/<name>
+            - id: docs-identity
+              uri: ${IDENTITY_URL:http://localhost:8081}
+              predicates:
+                - Path=/v3/api-docs/identity
+              filters:
+                - SetPath=/v3/api-docs
+            - id: docs-product
+              uri: ${PRODUCT_URL:http://localhost:8082}
+              predicates:
+                - Path=/v3/api-docs/product
+              filters:
+                - SetPath=/v3/api-docs
+            - id: docs-order
+              uri: ${ORDER_URL:http://localhost:8083}
+              predicates:
+                - Path=/v3/api-docs/order
+              filters:
+                - SetPath=/v3/api-docs
+            - id: docs-payment
+              uri: ${PAYMENT_URL:http://localhost:8084}
+              predicates:
+                - Path=/v3/api-docs/payment
+              filters:
+                - SetPath=/v3/api-docs
+
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:true}
+    urls:
+      - { name: identity, url: /v3/api-docs/identity }
+      - { name: product, url: /v3/api-docs/product }
+      - { name: order, url: /v3/api-docs/order }
+      - { name: payment, url: /v3/api-docs/payment }
+    persist-authorization: true
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:true}
+
 gateway:
   jwt:
     # HS256 secret, must be shared with identity-service (min 32 bytes)

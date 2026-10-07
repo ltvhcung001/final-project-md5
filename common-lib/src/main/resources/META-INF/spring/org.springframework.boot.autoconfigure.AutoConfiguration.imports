@@ -1,1 +1,2 @@
 com.omnichannel.common.CommonAutoConfiguration
+com.omnichannel.common.OpenApiAutoConfiguration
