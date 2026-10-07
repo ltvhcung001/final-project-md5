@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package com.omnichannel.product.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.omnichannel.product.grpc";
+option java_outer_classname = "ProductProto";
+
+// Order service -> Product service. Used to snapshot name and price at order time.
+service ProductService {
+  rpc GetProduct (GetProductRequest) returns (ProductReply);
+  rpc GetProducts (GetProductsRequest) returns (GetProductsReply);
+}
+
+message GetProductRequest {
+  string sku = 1;
+}
+
+message GetProductsRequest {
+  repeated string skus = 1;
+}
+
+message ProductReply {
+  string product_id = 1;
+  string sku = 2;
+  string name = 3;
+  // Decimal as string to avoid floating point errors, e.g. "199000.00"
+  string price = 4;
+  string currency = 5;
+  bool active = 6;
+}
+
+message GetProductsReply {
+  repeated ProductReply products = 1;
+}

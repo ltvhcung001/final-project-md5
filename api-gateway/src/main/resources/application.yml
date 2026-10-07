@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  threads:
+    virtual:
+      enabled: true
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: identity-service
+              uri: ${IDENTITY_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/auth/**,/api/users/**
+            - id: product-service
+              uri: ${PRODUCT_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/products/**,/api/categories/**,/api/brands/**
+            - id: order-inventory-service
+              uri: ${ORDER_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/orders/**,/api/inventory/**
+            - id: payment-service
+              uri: ${PAYMENT_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/payments/**
+
+gateway:
+  jwt:
+    # HS256 secret, must be shared with identity-service (min 32 bytes)
+    secret: ${JWT_SECRET:change-me-change-me-change-me-change-me}
+  rate-limit:
+    requests-per-minute: ${RATE_LIMIT_RPM:120}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

@@ -1,0 +1,24 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: product-service
+  threads:
+    virtual:
+      enabled: true
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/product_db}
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+
+grpc:
+  server:
+    port: 9092
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
