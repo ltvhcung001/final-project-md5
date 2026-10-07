@@ -52,7 +52,7 @@ Client -> POST /api/orders (Idempotency-Key)
 | Stop Notification Service, orders still work | Done, run locally | Order created while it was down. The email was delivered after restart from the queue (section 5) |
 | Real VPS with domain, HTTPS, firewall | Prepared, **not executed** | I cannot reach your AWS account. Section 7 is the step-by-step |
 | Monitoring (Prometheus, Grafana, Loki) | Config written, **not run** | Compose profile `monitoring`. No dashboards are provisioned yet (section 9) |
-| Swagger UI | Done | One aggregated UI at the gateway: `http://localhost:8080/swagger-ui.html` (section 3.4) |
+| Swagger UI | Done | One aggregated UI at the gateway: `http://localhost:8080/swagger-ui.html` (section 3.3) |
 
 ---
 
@@ -89,7 +89,7 @@ bash scripts/seed.sh
 | http://localhost:8080 | API gateway |
 | http://localhost:8025 | Mailpit: every email the platform sends |
 | http://localhost:15672 | RabbitMQ UI (guest / guest) |
-| http://localhost:8080/swagger-ui.html | **Swagger UI for all services** (use the dropdown top-right); see 3.4 |
+| http://localhost:8080/swagger-ui.html | **Swagger UI for all services** (use the dropdown top-right); see 3.3 |
 
 Default local admin: `admin@example.com` / `Admin@12345` (created by `identity-service` on startup). **Local use only.**
 
