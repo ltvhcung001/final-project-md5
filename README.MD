@@ -1,5 +1,8 @@
 # Omnichannel E-Commerce Platform 
 
+> Implementation status, how to run, test and deploy (including AWS): see [report.md](report.md).
+
+
 ---
 ## 1. Tech Stack
 

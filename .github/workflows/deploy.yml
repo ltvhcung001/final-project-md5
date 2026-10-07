@@ -67,6 +67,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read      # lets the server pull private GHCR images with the short-lived token
     steps:
       - uses: actions/checkout@v4
 
