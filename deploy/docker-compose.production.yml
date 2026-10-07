@@ -6,7 +6,7 @@ x-java-service: &java-service
   restart: unless-stopped
   networks: [backend-network]
   environment: &java-env
-    JAVA_TOOL_OPTIONS: "-Xmx320m"
+    JAVA_TOOL_OPTIONS: "-Xmx${JAVA_XMX:-256m}"
     RABBITMQ_HOST: rabbitmq
     RABBITMQ_USER: ${RABBITMQ_USER}
     RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
@@ -29,6 +29,7 @@ services:
       PRODUCT_URL: http://product-service:8082
       ORDER_URL: http://order-inventory-service:8083
       PAYMENT_URL: http://payment-service:8084
+      RATE_LIMIT_RPM: ${RATE_LIMIT_RPM:-120}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
@@ -46,6 +47,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/identity_db
       DB_USER: identity
       DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
       interval: 30s
@@ -62,6 +65,7 @@ services:
       <<: *java-env
       MONGO_URI: mongodb://mongodb:27017/product_db
       ELASTICSEARCH_URIS: http://elasticsearch:9200
+      SEARCH_ENABLED: ${SEARCH_ENABLED:-false}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
       interval: 30s
@@ -103,6 +107,9 @@ services:
       VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-}
       VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
       VNPAY_RETURN_URL: https://api.${DOMAIN}/api/payments/return/vnpay
+      MOMO_IPN_URL: https://api.${DOMAIN}/api/payments/ipn/momo
+      MOMO_REDIRECT_URL: https://api.${DOMAIN}/api/payments/return/momo
+      PAYMENT_MOCK_ENABLED: ${PAYMENT_MOCK_ENABLED:-true}
       MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE:-}
       MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY:-}
       MOMO_SECRET_KEY: ${MOMO_SECRET_KEY:-}
@@ -126,6 +133,8 @@ services:
       MAIL_PORT: ${MAIL_PORT:-2525}
       MAIL_USER: ${MAIL_USER:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_AUTH: ${MAIL_AUTH:-true}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health || exit 1"]
       interval: 30s
@@ -178,6 +187,7 @@ services:
           memory: 512m
 
   elasticsearch:
+    profiles: ["search"]   # optional, needs ~1 GB RAM; enable with --profile search and SEARCH_ENABLED=true
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
     restart: unless-stopped
     networks: [backend-network]
@@ -237,6 +247,7 @@ services:
 
   # ---------- monitoring ----------
   prometheus:
+    profiles: ["monitoring"]   # enable with: --profile monitoring
     image: prom/prometheus:v2.55.1
     restart: unless-stopped
     networks: [backend-network]
@@ -254,6 +265,7 @@ services:
           memory: 256m
 
   loki:
+    profiles: ["monitoring"]   # enable with: --profile monitoring
     image: grafana/loki:3.2.1
     restart: unless-stopped
     networks: [backend-network]
@@ -272,6 +284,7 @@ services:
           memory: 256m
 
   promtail:
+    profiles: ["monitoring"]   # enable with: --profile monitoring
     image: grafana/promtail:3.2.1
     restart: unless-stopped
     networks: [backend-network]
@@ -291,6 +304,7 @@ services:
           memory: 128m
 
   grafana:
+    profiles: ["monitoring"]   # enable with: --profile monitoring
     image: grafana/grafana:11.3.0
     restart: unless-stopped
     networks: [backend-network]

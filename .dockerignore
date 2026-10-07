@@ -2,3 +2,5 @@
 .git
 .idea
 *.iml
+logs
+**/logs

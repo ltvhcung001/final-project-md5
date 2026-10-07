@@ -1,8 +1,27 @@
-# Local development infrastructure only (run the Spring services from your IDE).
-#   docker compose -f deploy/docker-compose.local.yml up -d
+# Local development stack.
+#
+#   Infrastructure only (run the Spring services from your IDE):
+#     docker compose -f deploy/docker-compose.local.yml up -d
+#
+#   Whole system in containers (builds every image from source, first build takes a few minutes):
+#     docker compose -f deploy/docker-compose.local.yml --profile apps up -d --build
+#
+# Gateway http://localhost:8080 | Mailpit (catches all emails) http://localhost:8025 | RabbitMQ UI http://localhost:15672
 # Ports are published here for convenience; never do this in production.
 
+x-app-env: &app-env
+  JAVA_TOOL_OPTIONS: "-Xmx256m"
+  JWT_SECRET: local-dev-secret-local-dev-secret-1234
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_USER: guest
+  RABBITMQ_PASSWORD: guest
+
+x-app: &app
+  profiles: ["apps"]
+  restart: unless-stopped
+
 services:
+  # ---------- infrastructure ----------
   postgres:
     image: postgres:16-alpine
     environment:
@@ -14,12 +33,23 @@ services:
     ports: ["5432:5432"]
     volumes:
       - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   mongodb:
     image: mongo:7
     ports: ["27017:27017"]
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand({ping:1}).ok' | grep 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
 
   elasticsearch:
+    profiles: ["search"]    # optional: add --profile search and set SEARCH_ENABLED=true on product-service
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
     environment:
       discovery.type: single-node
@@ -30,12 +60,103 @@ services:
   redis:
     image: redis:7-alpine
     ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     ports: ["5672:5672", "15672:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
 
-  # Catches every email sent by notification-service: web UI on http://localhost:8025
   mailpit:
     image: axllent/mailpit:latest
     ports: ["1025:1025", "8025:8025"]
+
+  # ---------- application services (profile "apps") ----------
+  identity-service:
+    <<: *app
+    build: { context: .., dockerfile: identity-service/Dockerfile }
+    ports: ["8081:8081"]
+    environment:
+      <<: *app-env
+      DB_URL: jdbc:postgresql://postgres:5432/identity_db
+      DB_USER: identity
+      DB_PASSWORD: identity
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: Admin@12345
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  product-service:
+    <<: *app
+    build: { context: .., dockerfile: product-service/Dockerfile }
+    ports: ["8082:8082", "9092:9092"]
+    environment:
+      <<: *app-env
+      MONGO_URI: mongodb://mongodb:27017/product_db
+    depends_on:
+      mongodb: { condition: service_healthy }
+
+  order-inventory-service:
+    <<: *app
+    build: { context: .., dockerfile: order-inventory-service/Dockerfile }
+    ports: ["8083:8083"]
+    environment:
+      <<: *app-env
+      DB_URL: jdbc:postgresql://postgres:5432/order_db
+      DB_USER: orders
+      DB_PASSWORD: orders
+      REDIS_HOST: redis
+      PRODUCT_GRPC_ADDRESS: static://product-service:9092
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+
+  payment-service:
+    <<: *app
+    build: { context: .., dockerfile: payment-service/Dockerfile }
+    ports: ["8084:8084"]
+    environment:
+      <<: *app-env
+      DB_URL: jdbc:postgresql://postgres:5432/payment_db
+      DB_USER: payment
+      DB_PASSWORD: payment
+      PAYMENT_MOCK_ENABLED: "true"
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+
+  notification-service:
+    <<: *app
+    build: { context: .., dockerfile: notification-service/Dockerfile }
+    ports: ["8085:8085"]
+    environment:
+      <<: *app-env
+      MONGO_URI: mongodb://mongodb:27017/notification_db
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+    depends_on:
+      mongodb: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+
+  api-gateway:
+    <<: *app
+    build: { context: .., dockerfile: api-gateway/Dockerfile }
+    ports: ["8080:8080"]
+    environment:
+      <<: *app-env
+      IDENTITY_URL: http://identity-service:8081
+      PRODUCT_URL: http://product-service:8082
+      ORDER_URL: http://order-inventory-service:8083
+      PAYMENT_URL: http://payment-service:8084
+      RATE_LIMIT_RPM: "1000000"   # the default of 120/min per IP would throttle load tests
+    depends_on:
+      - identity-service

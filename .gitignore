@@ -5,3 +5,4 @@ target/
 .env
 deploy/.env
 *.log
+logs/
