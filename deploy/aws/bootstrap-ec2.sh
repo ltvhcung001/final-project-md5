@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# One-time setup of a fresh Ubuntu 22.04/24.04 EC2 instance. Run as the default "ubuntu" user:
-#   curl -fsSL https://raw.githubusercontent.com/<you>/<repo>/main/deploy/aws/bootstrap-ec2.sh | bash
-# or copy the file over with scp and run: bash bootstrap-ec2.sh
+# One-time setup of a fresh Ubuntu 22.04/24.04 EC2 instance, as the default "ubuntu" user.
+# See DEPLOY.md step 3: copy the deploy/ folder to ~/omnichannel/ and run
+#   bash ~/omnichannel/deploy/aws/bootstrap-ec2.sh
 #
 # What it does: swap file, Docker + compose plugin, Nginx, Certbot, a project folder. The firewall on AWS is the
 # Security Group (allow only 22, 80, 443), so UFW is optional here; it is enabled anyway as defence in depth.
@@ -44,7 +44,7 @@ mkdir -p "$APP_DIR/deploy"
 cat <<EOF
 
 Done. Log out and back in once so the docker group applies, then:
-  1. copy deploy/.env.example to $APP_DIR/deploy/.env and fill it in
-  2. configure Nginx + HTTPS (see report.md, section "HTTPS")
-  3. push to main: GitHub Actions builds the images and deploys
+  1. bash $APP_DIR/deploy/aws/init-env.sh      (creates deploy/.env with random secrets)
+  2. bash $APP_DIR/deploy/aws/setup-https.sh   (Nginx + free HTTPS certificate; DNS must already point here)
+  3. push to main: GitHub Actions builds the images and deploys (see DEPLOY.md)
 EOF

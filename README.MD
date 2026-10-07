@@ -1,6 +1,6 @@
 # Omnichannel E-Commerce Platform 
 
-> Implementation status, how to run, test and deploy (including AWS): see [report.md](report.md).
+> Implementation status, how to run, test and deploy (including AWS): see [report.md](report.md). To deploy on AWS with your own domain: [DEPLOY.md](DEPLOY.md).
 
 
 ---

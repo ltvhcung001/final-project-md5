@@ -137,6 +137,10 @@ Without it, `GET /api/products?q=` falls back to a case-insensitive name search 
 
 All responses use `{ "code": 0, "message": "success", "data": ... }`. Errors use a non-zero `code` (see `ErrorCode.java`).
 
+HTTP status codes: creating something (register, place order, create product/category/brand/address) returns **201 Created**
+(with a `Location` header for orders, products, categories and brands). Deleting returns **204 No Content** with no body.
+Everything else successful is **200**. Errors keep their own status (400, 401, 403, 404, 409, 502, 503).
+
 ```bash
 B=http://localhost:8080; H='Content-Type: application/json'
 
@@ -258,6 +262,9 @@ Measured memory after the load test with `-Xmx256m`: gateway 440 MB, identity 25
 ---
 
 ## 7. Deploy to AWS (free-tier account)
+
+> **Short version:** follow [DEPLOY.md](DEPLOY.md), a copy-paste guide with helper scripts (`deploy/aws/init-env.sh` creates the
+> configuration, `deploy/aws/setup-https.sh` sets up Nginx and HTTPS and checks your domain). This section keeps the background and options.
 
 ### 7.1 Choose the instance
 

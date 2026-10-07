@@ -9,6 +9,7 @@ import com.omnichannel.order.dto.OrderDtos.PlaceOrderRequest;
 import com.omnichannel.order.dto.OrderDtos.UpdateStatusRequest;
 import com.omnichannel.order.service.OrderService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -33,12 +35,13 @@ public class OrderController {
 
     /** Idempotency-Key makes client retries safe: the same key returns the same order. */
     @PostMapping
-    public ApiResponse<OrderResponse> place(
+    public ResponseEntity<ApiResponse<OrderResponse>> place(
             @RequestHeader(Headers.USER_ID) String userId,
             @RequestHeader(value = Headers.USER_EMAIL, required = false) String email,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody PlaceOrderRequest req) {
-        return ApiResponse.ok(service.placeOrder(userId, email, idempotencyKey, req));
+        OrderResponse order = service.placeOrder(userId, email, idempotencyKey, req);
+        return ResponseEntity.created(URI.create("/api/orders/" + order.id())).body(ApiResponse.ok(order));
     }
 
     @GetMapping

@@ -9,6 +9,8 @@ import com.omnichannel.identity.dto.UserDtos.UpdateRolesRequest;
 import com.omnichannel.identity.dto.UserDtos.UserResponse;
 import com.omnichannel.identity.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,15 +46,15 @@ public class UserController {
     }
 
     @PostMapping("/me/addresses")
-    public ApiResponse<AddressResponse> addAddress(@RequestHeader(Headers.USER_ID) UUID userId,
-                                                   @Valid @RequestBody AddressRequest req) {
-        return ApiResponse.ok(users.addAddress(userId, req));
+    public ResponseEntity<ApiResponse<AddressResponse>> addAddress(@RequestHeader(Headers.USER_ID) UUID userId,
+                                                                   @Valid @RequestBody AddressRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(users.addAddress(userId, req)));
     }
 
     @DeleteMapping("/me/addresses/{id}")
-    public ApiResponse<Void> deleteAddress(@RequestHeader(Headers.USER_ID) UUID userId, @PathVariable UUID id) {
+    public ResponseEntity<Void> deleteAddress(@RequestHeader(Headers.USER_ID) UUID userId, @PathVariable UUID id) {
         users.deleteAddress(userId, id);
-        return ApiResponse.ok();
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/roles")

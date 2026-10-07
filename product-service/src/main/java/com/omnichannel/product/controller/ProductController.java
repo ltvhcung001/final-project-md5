@@ -6,6 +6,7 @@ import com.omnichannel.product.dto.ProductDtos.ProductRequest;
 import com.omnichannel.product.dto.ProductDtos.ProductResponse;
 import com.omnichannel.product.service.ProductService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URI;
 
 /** Writes are restricted to ADMIN by the gateway. */
 @RestController
@@ -43,8 +46,9 @@ public class ProductController {
     }
 
     @PostMapping
-    public ApiResponse<ProductResponse> create(@Valid @RequestBody ProductRequest req) {
-        return ApiResponse.ok(service.create(req));
+    public ResponseEntity<ApiResponse<ProductResponse>> create(@Valid @RequestBody ProductRequest req) {
+        ProductResponse created = service.create(req);
+        return ResponseEntity.created(URI.create("/api/products/" + created.id())).body(ApiResponse.ok(created));
     }
 
     @PutMapping("/{id}")
@@ -53,8 +57,8 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deactivate(@PathVariable String id) {
+    public ResponseEntity<Void> deactivate(@PathVariable String id) {
         service.deactivate(id);
-        return ApiResponse.ok();
+        return ResponseEntity.noContent().build();
     }
 }

@@ -77,7 +77,7 @@ export default function (data) {
       tags: { name: 'place_order' },
     });
 
-  if (res.status === 200) {
+  if (res.status === 201) {
     ordersCreated.add(1);
   } else if (res.status === 409 && res.json('code') === 4001) {
     outOfStock.add(1); // expected once the stock is gone

@@ -12,6 +12,7 @@ import com.omnichannel.product.dto.ProductDtos.CategoryResponse;
 import com.omnichannel.product.repository.BrandRepository;
 import com.omnichannel.product.repository.CategoryRepository;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.util.List;
 
 /** Categories and brands. Reads are public, writes are ADMIN only (enforced by the gateway). */
@@ -40,11 +42,12 @@ public class TaxonomyController {
     }
 
     @PostMapping("/api/categories")
-    public ApiResponse<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest req) {
+    public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(@Valid @RequestBody CategoryRequest req) {
         Category c = new Category();
         c.setName(req.name());
         c.setParentId(req.parentId());
-        return ApiResponse.ok(CategoryResponse.of(categories.save(c)));
+        CategoryResponse created = CategoryResponse.of(categories.save(c));
+        return ResponseEntity.created(URI.create("/api/categories/" + created.id())).body(ApiResponse.ok(created));
     }
 
     @PutMapping("/api/categories/{id}")
@@ -56,9 +59,9 @@ public class TaxonomyController {
     }
 
     @DeleteMapping("/api/categories/{id}")
-    public ApiResponse<Void> deleteCategory(@PathVariable String id) {
+    public ResponseEntity<Void> deleteCategory(@PathVariable String id) {
         categories.deleteById(id);
-        return ApiResponse.ok();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/api/brands")
@@ -67,11 +70,12 @@ public class TaxonomyController {
     }
 
     @PostMapping("/api/brands")
-    public ApiResponse<BrandResponse> createBrand(@Valid @RequestBody BrandRequest req) {
+    public ResponseEntity<ApiResponse<BrandResponse>> createBrand(@Valid @RequestBody BrandRequest req) {
         Brand b = new Brand();
         b.setName(req.name());
         b.setLogoUrl(req.logoUrl());
-        return ApiResponse.ok(BrandResponse.of(brands.save(b)));
+        BrandResponse created = BrandResponse.of(brands.save(b));
+        return ResponseEntity.created(URI.create("/api/brands/" + created.id())).body(ApiResponse.ok(created));
     }
 
     @PutMapping("/api/brands/{id}")
@@ -83,8 +87,8 @@ public class TaxonomyController {
     }
 
     @DeleteMapping("/api/brands/{id}")
-    public ApiResponse<Void> deleteBrand(@PathVariable String id) {
+    public ResponseEntity<Void> deleteBrand(@PathVariable String id) {
         brands.deleteById(id);
-        return ApiResponse.ok();
+        return ResponseEntity.noContent().build();
     }
 }

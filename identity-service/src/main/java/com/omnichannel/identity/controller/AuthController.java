@@ -7,6 +7,8 @@ import com.omnichannel.identity.dto.AuthDtos.RegisterRequest;
 import com.omnichannel.identity.dto.AuthDtos.TokenResponse;
 import com.omnichannel.identity.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,8 +25,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<TokenResponse> register(@Valid @RequestBody RegisterRequest req) {
-        return ApiResponse.ok(auth.register(req));
+    public ResponseEntity<ApiResponse<TokenResponse>> register(@Valid @RequestBody RegisterRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(auth.register(req)));
     }
 
     @PostMapping("/login")
