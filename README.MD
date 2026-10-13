@@ -1,6 +1,6 @@
 # Omnichannel E-Commerce Platform 
 
-> Implementation status, how to run, test and deploy (including AWS): see [report.md](report.md). To deploy on AWS with your own domain: [DEPLOY.md](DEPLOY.md). Postman collection: [docs/postman](docs/postman/README.md).
+> Implementation status, how to run, test and deploy (including AWS): see [report.md](report.md). To deploy on AWS with your own domain: [DEPLOY.md](DEPLOY.md). Postman collection: [docs/postman](docs/postman/README.md). Kịch bản demo (tiếng Việt): [HUONG-DAN-DEMO.md](HUONG-DAN-DEMO.md).
 
 
 ---
