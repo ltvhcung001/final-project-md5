@@ -12,3 +12,4 @@ logs/
 *.key
 id_rsa*
 deploy/.env
+*.local.md
