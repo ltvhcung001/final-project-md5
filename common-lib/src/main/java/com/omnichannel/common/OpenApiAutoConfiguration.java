@@ -5,6 +5,8 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
+import java.util.List;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -22,6 +24,8 @@ public class OpenApiAutoConfiguration {
     @Bean
     OpenAPI omnichannelOpenApi(@Value("${spring.application.name:service}") String name) {
         return new OpenAPI()
+                // relative server: Swagger calls the origin it was loaded from (the gateway), not the internal host:port
+                .servers(List.of(new Server().url("/")))
                 .info(new Info().title(name).version("1.0.0"))
                 .components(new Components().addSecuritySchemes("bearerAuth",
                         new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
