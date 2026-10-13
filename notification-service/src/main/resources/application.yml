@@ -36,6 +36,9 @@ notification:
   from: no-reply@omnichannel.local
 
 management:
+  health:
+    mail:
+      enabled: false   # an unreachable SMTP server must not mark the service unhealthy: mail is retried via the queue
   endpoints:
     web:
       exposure:
