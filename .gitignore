@@ -6,3 +6,9 @@ target/
 deploy/.env
 *.log
 logs/
+
+# private keys and secrets must never be committed
+*.pem
+*.key
+id_rsa*
+deploy/.env
