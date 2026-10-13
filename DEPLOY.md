@@ -201,9 +201,15 @@ Tip: add `alias dc='docker compose -f ~/omnichannel/deploy/docker-compose.produc
   `"paymentMethod": "VNPAY"` when placing orders. Set `PAYMENT_MOCK_ENABLED=false` when you no longer want the fake method.
 - **Real emails:** create a free Mailtrap inbox and put its SMTP host, port, user and password in `.env`
   (`MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`).
-- **Monitoring (needs 8 GiB RAM):** add the `grafana` DNS record, run
-  `docker compose -f ~/omnichannel/deploy/docker-compose.production.yml --profile monitoring up -d`, then
-  `WITH_GRAFANA=yes bash ~/omnichannel/deploy/aws/setup-https.sh`. Open `https://grafana.<DOMAIN>` (user `admin`, password in `.env`).
+- **Monitoring (Prometheus + Grafana + Loki; verified on an 8 GiB server, it adds about 0.5 GB):**
+  1. Add a DNS record `grafana` -> `<IP>` (same as `api`, with any proxy/"protection" switch **off**).
+  2. On the server add `COMPOSE_PROFILES=monitoring` to `~/omnichannel/deploy/.env` (so every deploy keeps it running), then run
+     `docker compose -f ~/omnichannel/deploy/docker-compose.production.yml up -d`.
+  3. HTTPS for Grafana: `sudo certbot --nginx -d grafana.<DOMAIN> --non-interactive --agree-tos -m <email> --redirect`
+     (or `WITH_GRAFANA=yes bash ~/omnichannel/deploy/aws/setup-https.sh`).
+  4. Open `https://grafana.<DOMAIN>`: user `admin`, password = `GRAFANA_ADMIN_PASSWORD` in `.env`. Prometheus and Loki are
+     already connected. Import dashboards via Dashboards -> New -> Import with IDs **4701** (JVM Micrometer) and **12900**
+     (Spring Boot); choose the Prometheus data source. For logs open Explore -> Loki and query `{service="order-inventory-service"}`.
 - **Elasticsearch search (needs about 1 GB more):** `--profile search` and `SEARCH_ENABLED=true` in `.env`.
 - **Load test on the server:** temporarily set `RATE_LIMIT_RPM=1000000` in `.env`, redeploy, run k6 from another machine,
   then set it back to `120`.

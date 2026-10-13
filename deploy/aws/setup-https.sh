@@ -48,7 +48,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 echo "==> certificate"
-sudo certbot --nginx "${HOSTS[@]}" --non-interactive --agree-tos -m "$EMAIL" --redirect
+sudo certbot --nginx "${HOSTS[@]}" --non-interactive --agree-tos --expand -m "$EMAIL" --redirect
 
 echo "==> renewal check (certbot renews automatically through a systemd timer)"
 sudo certbot renew --dry-run >/dev/null && echo "renewal OK"
