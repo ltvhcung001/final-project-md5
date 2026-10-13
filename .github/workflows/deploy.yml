@@ -3,6 +3,9 @@ name: Build and Deploy
 on:
   push:
     branches: [main]
+    paths-ignore:          # documentation-only pushes do not redeploy
+      - "**.md"
+      - "docs/**"
   workflow_dispatch:
 
 env:

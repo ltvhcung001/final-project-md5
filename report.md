@@ -177,6 +177,10 @@ curl -s $B/api/orders/<orderId> -H "Authorization: Bearer $TOKEN" | jq .data.sta
 | `GET /api/payments/ipn/vnpay`, `GET /api/payments/return/vnpay`, `POST /api/payments/ipn/momo` | provider callbacks | open at the gateway, protected by signature |
 | `POST /api/payments/{orderId}/refund`, `GET /api/payments/reconciliation?date=` | admin | |
 
+### Postman
+
+A ready-made collection with tests for every endpoint is in [`docs/postman/`](docs/postman/README.md) (import it with the production or local environment file).
+
 ### Real VNPay / MoMo sandbox
 
 1. Register for the VNPay sandbox and MoMo test environment and put the credentials into `deploy/.env` (`VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`, `MOMO_*`).

@@ -210,6 +210,25 @@ Tip: add `alias dc='docker compose -f ~/omnichannel/deploy/docker-compose.produc
   4. Open `https://grafana.<DOMAIN>`: user `admin`, password = `GRAFANA_ADMIN_PASSWORD` in `.env`. Prometheus and Loki are
      already connected. Import dashboards via Dashboards -> New -> Import with IDs **4701** (JVM Micrometer) and **12900**
      (Spring Boot); choose the Prometheus data source. For logs open Explore -> Loki and query `{service="order-inventory-service"}`.
+- **Email (notification-service):** the service runs from the first deploy, but **it cannot send mail until you give it an SMTP
+  login**. Until then every email fails, is retried 3 times, and ends in the queue `notification.events.dlq`. Orders still work.
+  1. Create a free [Mailtrap](https://mailtrap.io) account -> Email Testing -> Inboxes -> your inbox -> SMTP settings. Copy the username and password.
+     Mailtrap catches the emails in a test inbox instead of delivering them, which is ideal for a demo.
+  2. On the server edit `~/omnichannel/deploy/.env` and set `MAIL_USER=...` and `MAIL_PASSWORD=...`
+     (`MAIL_HOST=sandbox.smtp.mailtrap.io`, `MAIL_PORT=2525`, `MAIL_AUTH=true` and `MAIL_STARTTLS=true` are already the defaults).
+  3. `docker compose -f ~/omnichannel/deploy/docker-compose.production.yml up -d notification-service`
+  4. Place an order; the "We received your order" email appears in the Mailtrap inbox within a few seconds.
+  5. Old failed messages stay in the dead-letter queue. Delete them with
+     `docker exec deploy-rabbitmq-1 rabbitmqctl purge_queue notification.events.dlq`.
+  Other providers: Gmail (`smtp.gmail.com`, port 587, an app password, needs 2-step verification), or Amazon SES SMTP
+  (port 587, only verified recipients while the account is in the SES sandbox).
+- **Docker log rotation (recommended on a long-running server):** container logs grow without limit by default.
+  ```bash
+  echo '{"log-driver":"json-file","log-opts":{"max-size":"10m","max-file":"3"}}' | sudo tee /etc/docker/daemon.json
+  sudo systemctl restart docker
+  docker compose -f ~/omnichannel/deploy/docker-compose.production.yml up -d --force-recreate   # applies it to existing containers
+  ```
+  This restarts everything for a minute or two, so do it between demos.
 - **Elasticsearch search (needs about 1 GB more):** `--profile search` and `SEARCH_ENABLED=true` in `.env`.
 - **Load test on the server:** temporarily set `RATE_LIMIT_RPM=1000000` in `.env`, redeploy, run k6 from another machine,
   then set it back to `120`.
